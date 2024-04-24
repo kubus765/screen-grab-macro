@@ -1,0 +1,88 @@
+import pyautogui
+import time
+from screeninfo import get_monitors
+import threading
+
+# Define the image paths and corresponding text to type
+image_path_1 = r'\image1.png'
+image_path_2 = r'\image2.png'
+
+text_to_type_1 = 'test'
+text_to_type_2 = 'test2'
+
+# Set a custom confidence threshold (e.g., 0.9 for 90% confidence)
+custom_confidence = 0.999
+
+# Function to get the primary monitor's width and height
+def get_primary_monitor_dimensions():
+    primary_monitor = get_monitors()[0]
+    return primary_monitor.width, primary_monitor.height
+
+# Function to type text and press enter
+def type_text_and_press_enter(text):
+    pyautogui.typewrite(text)
+    pyautogui.press('enter')
+
+# Function to search for the second image in a separate thread
+def search_for_image_2():
+    while True:
+        try:
+            # Get primary monitor dimensions
+            screen_width, screen_height = get_primary_monitor_dimensions()
+
+            # Adjust region based on primary monitor dimensions for image 2
+            region_2 = (screen_width // 2 - 250, screen_height // 2 - 150, 200, 200)
+
+            # Take a screenshot and save it as preview2.png
+            screenshot = pyautogui.screenshot(region=region_2)
+            screenshot.save('preview2.png')
+
+            # Compare the screenshot with the image
+            location_2 = pyautogui.locateOnScreen(image_path_2, region=region_2, confidence=custom_confidence)
+
+            if location_2 is not None:
+                type_text_and_press_enter(text_to_type_2)
+                print("Found Tester 2")
+            else:
+                print("Nothing Found for Tester 2")
+        except pyautogui.ImageNotFoundException:
+            print("Image not found for Tester 2. Retrying...")
+        except OSError:  # Catch OSError specifically for screen grab failure
+            print("Screen grab failed. Retrying in 5 seconds...")
+            time.sleep(5)  # Sleep for 5 seconds before retrying
+
+        # Adjust the sleep time as needed to control the frequency of checks
+        time.sleep(0.5)
+
+# Create and start the thread for searching for image 2
+thread_image_2 = threading.Thread(target=search_for_image_2)
+thread_image_2.start()
+
+while True:
+    try:
+        # Get primary monitor dimensions
+        screen_width, screen_height = get_primary_monitor_dimensions()
+
+        # Adjust region based on primary monitor dimensions for image 1
+        region_1 = (screen_width // 2 - 250, screen_height // 2 - 150, 200, 200)
+
+        # Take a screenshot and save it as preview.png
+        screenshot = pyautogui.screenshot(region=region_1)
+        screenshot.save('preview.png')
+
+        # Compare the screenshot with the image
+        location_1 = pyautogui.locateOnScreen(image_path_1, region=region_1, confidence=custom_confidence)
+
+        if location_1 is not None:
+            type_text_and_press_enter(text_to_type_1)
+            print("Found Tester 1")
+        else:
+            print("Nothing Found for Tester 1")
+    except pyautogui.ImageNotFoundException:
+        print("Image not found for Tester 1. Retrying...")
+    except OSError:  # Catch OSError specifically for screen grab failure
+        print("Screen grab failed. Retrying in 5 seconds...")
+        time.sleep(5)  # Sleep for 5 seconds before retrying
+
+    # Adjust the sleep time as needed to control the frequency of checks
+    time.sleep(0.5)
