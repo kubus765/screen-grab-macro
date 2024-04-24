@@ -2,6 +2,7 @@ Python script designed to automate the testing process by searching for specific
 
 Features:
 Image Recognition: Uses PyAutoGUI's image recognition capabilities to locate specified images on the screen.
+
 Text Typing: Types predefined text when target images are found.
 Custom Confidence Threshold: Allows setting a custom confidence threshold for image recognition.
 Multi-Threading: Utilizes threading to concurrently search for multiple images.
