@@ -2,13 +2,26 @@ import pyautogui
 import time
 from screeninfo import get_monitors
 import threading
+import os
+import sys
+
+# Function to log the program startup time to a text file
+# Function to log the program startup time to a text file if not already logged for the current day
+def log_startup_time():
+    current_date = time.strftime("%Y-%m-%d")
+    with open('startup_time.txt', 'r') as file:
+        lines = file.readlines()
+        if not lines or lines[-1].split()[0] != current_date:
+            with open('startup_time.txt', 'a') as file:
+                file.write(current_date + ' ' + time.strftime("%H:%M:%S") + '\n')
+
 
 # Define the image paths and corresponding text to type
-image_path_1 = r'\image1.png'
-image_path_2 = r'\image2.png'
+image_path_1 = r'C:\Users\Kuba\Documents\skrypty\image1.png'
+image_path_2 = r'C:\Users\Kuba\Documents\skrypty\image2.png'
 
-text_to_type_1 = 'test'
-text_to_type_2 = 'test2'
+text_to_type_1 = 'Maxiecu512'
+text_to_type_2 = 'maxiecu256'
 
 # Set a custom confidence threshold (e.g., 0.9 for 90% confidence)
 custom_confidence = 0.999
@@ -25,6 +38,7 @@ def type_text_and_press_enter(text):
 
 # Function to search for the second image in a separate thread
 def search_for_image_2():
+    consecutive_failures = 0  # Counter for consecutive screen grab failures
     while True:
         try:
             # Get primary monitor dimensions
@@ -43,13 +57,24 @@ def search_for_image_2():
             if location_2 is not None:
                 type_text_and_press_enter(text_to_type_2)
                 print("Found Tester 2")
+                consecutive_failures = 0  # Reset the counter on success
             else:
                 print("Nothing Found for Tester 2")
+                consecutive_failures += 1
+
+            
         except pyautogui.ImageNotFoundException:
             print("Image not found for Tester 2. Retrying...")
         except OSError:  # Catch OSError specifically for screen grab failure
-            print("Screen grab failed. Retrying in 5 seconds...")
-            time.sleep(5)  # Sleep for 5 seconds before retrying
+            print("Screen grab failed for Tester 2. Retrying in 3 seconds...")
+            time.sleep(3)  # Sleep for 3 seconds before retrying
+            consecutive_failures += 1
+            if consecutive_failures >= 2:
+                # If there is OSError ----> restart program
+                consecutive_failures = 0  # Reset the counter
+                print("Restarting program due to OS errors.")
+                os.execv(sys.executable, ['python'] + sys.argv)  # Restart the Python program
+                
 
         # Adjust the sleep time as needed to control the frequency of checks
         time.sleep(0.5)
@@ -57,6 +82,8 @@ def search_for_image_2():
 # Create and start the thread for searching for image 2
 thread_image_2 = threading.Thread(target=search_for_image_2)
 thread_image_2.start()
+
+log_startup_time()
 
 while True:
     try:
@@ -81,8 +108,8 @@ while True:
     except pyautogui.ImageNotFoundException:
         print("Image not found for Tester 1. Retrying...")
     except OSError:  # Catch OSError specifically for screen grab failure
-        print("Screen grab failed. Retrying in 5 seconds...")
-        time.sleep(5)  # Sleep for 5 seconds before retrying
+        print("Screen grab failed for Tester 1. Retrying in 3 seconds...")
+        time.sleep(3)  # Sleep for 3 seconds before retrying
 
     # Adjust the sleep time as needed to control the frequency of checks
     time.sleep(0.5)
